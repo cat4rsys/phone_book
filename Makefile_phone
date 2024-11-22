@@ -1,0 +1,11 @@
+phone: tree.o phone.o
+	gcc -o $@ $^
+
+.PHONY: clean
+
+clean:
+	rm phone
+	rm *.o
+
+%.o:%.c
+	$(CC) -c -o $@ $<
