@@ -1,4 +1,4 @@
-phone: tree.o phone.o
+phone: tree_b.o phone.o
 	gcc -o $@ $^
 
 .PHONY: clean

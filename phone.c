@@ -60,18 +60,10 @@ void deleteEnter(char * buf)
 }
 
 int main(const int argc, const char * argv[]) {
-	/*char buf[1024];
-	Tree *tree = tree_create(str_clone, str_cmp, free);
-	while(fgets(buf, sizeof(buf), stdin)) {
-		tree_insert(tree, buf);
-	}
-	tree_delete(tree, (void*)"aaa\n");
-	tree_traverse(tree, (void*)"a", (void*)"e", (tree_cb)tree_print);
-	tree_destroy(tree);*/
-
-    if (argc > 4) return printUsageError();
-
 	char buf[1024];
+	char id[1024];
+	char phone[1024];
+
 	Tree * tree = tree_create(str_clone, str_cmp, custom_free);
 	FILE * input_file = fopen("data.txt", "r");
 
@@ -84,7 +76,48 @@ int main(const int argc, const char * argv[]) {
 
 	fclose(input_file);
 
-    if (!strcmp(argv[1], "-S")) {
+	while(fgets(buf, sizeof(buf), stdin)) {
+		if (sscanf(buf, "A %s %s", id, phone) == 2) {
+			size_t summaryLenght = strlen(id) + strlen(phone) + 4;
+			size_t seek          = 0;
+
+			char * strToInsert = (char *)malloc(summaryLenght);
+
+			strcpy(strToInsert + seek, id);
+			seek += strlen(id);
+
+			strToInsert[seek++] = ' ';
+			strToInsert[seek++] = '|';
+			strToInsert[seek++] = ' ';
+
+			strcpy(strToInsert + seek, phone);
+			seek += strlen(phone);
+
+			strToInsert[seek] = '\0';
+
+			printf("%s\n", strToInsert);
+
+			tree_insert(tree, (void *)strToInsert);
+		} else if ( sscanf(buf, "D %s", id) == 1 ) {
+			tree_delete(tree, id);
+		} else if ( sscanf(buf, "S %s", id) == 1 ) {
+			char* result;
+
+			if ( tree_search(tree, id, (void**)&result)  ) {
+				printf("%s Found\n", result);
+			} else {
+				printf("Not found\n");
+			}
+		} else {
+			printf("unknown command\n");
+		}
+		//printf("After insert\n");
+		//tree_traverse(tree, NULL, tree_print);
+		
+		//tree_insert(tree, buf);
+	}
+
+    /*if (!strcmp(argv[1], "-S")) {
 		if (argc != 3) return printUsageError();
 
 		char * endOfSearch   = strdup(argv[2]);
@@ -123,7 +156,7 @@ int main(const int argc, const char * argv[]) {
 		printf("%s\n", strToInsert);
 
 		tree_insert(tree, (void *)strToInsert);
-	}
+	}*/
 
 	FILE * outputFile = fopen("data.txt", "w");
 
