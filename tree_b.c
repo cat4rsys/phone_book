@@ -84,13 +84,13 @@ int tree_search(Tree* t, const void* key, void** value) {
 	return _tree_search(t, t->root, key, value); 
 }
 
-int _tree_traverse(Tree* t, int level, const void* start, Node* n, tree_cb cb) {
+int _tree_traverse(Tree* t, int level, const void* start, Node* n, FILE * outputFile, tree_cb cb) {
 	if ( !n ) return 0;
 	if ( !start || t->cmp(start, n->v) <= 0 ) {
-		if (_tree_traverse(t, level+1, start, n->l, cb)) return 1;
-		if ( cb && cb(t, level, n->v) ) return 1;
+		if (_tree_traverse(t, level+1, start, n->l, outputFile, cb)) return 1;
+		if ( cb && cb(t, level, n->v, outputFile) ) return 1;
 	}
-	return _tree_traverse(t, level+1, start, n->r, cb);
+	return _tree_traverse(t, level+1, start, n->r, outputFile, cb);
 }
 
 
@@ -98,14 +98,15 @@ Node* _tree_delete(Tree* t, Node* L, void* v, Node* R,  const void* key, Node* o
 	int cmp = t->cmp(key, v);
 	if ( cmp == 0 ) {
 		if ( !L && !R ) {
-			if ( t->free) t->free(v, NULL);
+			if ( t->free) t->free(v);
 			if ( old) free(old);
 			return NULL;
 		}
 		if( H(R) > H(L) ) return BT(_tree_delete(t, L, v, R->l, key, DROP(old)), R->v, R->r, DROP(R));
 		else return L?BT(L->l, L->v, _tree_delete(t, L->r, v, R, key, DROP(old)), DROP(L)):NULL;
-	} else if ( cmp > 0) return R?BT(L, v, _tree_delete(t, R->l, R->v, R->r, key, DROP(old)), DROP(R)):NULL;
-	else return L?BT(_tree_delete(t, L->l, L->v, L->r, key, DROP(old)), v, R, DROP(L)):NULL;
+	} 
+	else if ( cmp > 0) return BT(L, v, R?_tree_delete(t, R->l, R->v, R->r, key, DROP(R)):NULL, DROP(old));
+    else return BT(L?_tree_delete(t, L->l, L->v, L->r, key, DROP(L)):NULL, v, R, DROP(old));
 }
 
 
@@ -115,20 +116,20 @@ int tree_delete(Tree* t, const void* key) {
 }
 
 
-int tree_traverse(Tree* t, const void* start, tree_cb cb ) {
-	return _tree_traverse(t, 0, start, t->root, cb);
+int tree_traverse(Tree* t, const void* start, FILE * outputFile, tree_cb cb ) {
+	return _tree_traverse(t, 0, start, t->root, outputFile, cb);
 }
 
-void _tree_destroy(Tree* t, Node* n, FILE * outputFile) {
+void _tree_destroy(Tree* t, Node* n) {
 	if ( !n ) return;
-	_tree_destroy(t, n->l, outputFile);
-	_tree_destroy(t, n->r, outputFile);
-	if ( t->free ) t->free(n->v, outputFile);
+	_tree_destroy(t, n->l);
+	_tree_destroy(t, n->r);
+	if ( t->free ) t->free(n->v);
 	free(n);
 }
 
 
-void tree_destroy(Tree* t, FILE * outputFile) {
-	_tree_destroy(t, t->root, outputFile);
+void tree_destroy(Tree* t) {
+	_tree_destroy(t, t->root);
 }
 
